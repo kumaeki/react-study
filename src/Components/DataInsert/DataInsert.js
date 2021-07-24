@@ -1,5 +1,5 @@
-import React, { useState, ChangeEvent } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
+
 import {
     TextField,
     Select,
@@ -10,87 +10,40 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
+    Divider,
 } from '@material-ui/core';
 import { CustomFormControlLabel, ErrorLabel } from '../control/FormControlLabel';
 import { CustomButton } from '../control/Button';
-
-const selectStyles = {
-    control: (base, state) => ({
-        ...base,
-        minHeight: 27,
-        height: 27,
-        width: 240,
-        fontWeight: 100,
-        borderRadius: 0,
-        borderColor: state.isFocused ? 'blue' : 'gainsboro',
-        '&:hover': {
-            borderColor: state.isFocused ? 'blue' : 'gainsboro',
-        },
-    }),
-    option: (provided, state) => ({
-        ...provided,
-        borderBottom: '1px dotted pink',
-        color: state.isSelected ? 'blue' : 'black',
-        padding: 10,
-        fontWeight: 100,
-    }),
-    dropdownIndicator: (base) => ({
-        ...base,
-        paddingTop: 0,
-        paddingBottom: 0,
-        fontWeight: 100,
-    }),
-    clearIndicator: (base) => ({
-        ...base,
-        paddingTop: 0,
-        paddingBottom: 0,
-    }),
-    valueContainer: (base) => ({
-        ...base,
-        paddingTop: 0,
-        paddingBottom: 0,
-        fontWeight: 100,
-    }),
-};
+import { DataTable } from './DataTable';
+import { Server } from './function/Server';
+import { selectStyles } from './DataInsertSelectStyles';
 
 const DataInsert = () => {
     const [code, SetCode] = useState('');
-    const [price, SetPrice] = useState(0);
+    const [cost, SetCost] = useState(0);
+    const [share, SetShare] = useState(0);
     const [currency, SetCurrency] = useState('CNY');
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const [isCodeExist, setIsCodeExist] = useState(false);
 
     const handleInsert = () => {
         setIsConfirmOpen(true);
     };
 
     const handleClear = () => {
-        SetCode(' ');
-        SetPrice(0);
+        SetCode('');
+        SetCost(0);
         SetCurrency('CNY');
     };
 
-    const handleAgree = () => {
-        searchCode();
-    };
-
-    const searchCode = () => {
-        const url = `http://127.0.0.1:8081/searchYahoo?code=${code}`;
-        axios.get(url).then((res) => {
-            const result = res.data.chart.result;
+    const handleAgree = async () => {
+        if (!code || !cost || !share) {
+            alert('please input all value');
             handleClose();
-            if (!result) alert('Code do not exsit! please check the code.');
-            else insertData();
-        });
-    };
-    const insertData = () => {
-        const url = 'http://127.0.0.1:8081/insert';
-        const param = { code: code, price: price, currency: currency };
-        const headers = { headers: { 'Content-Type': 'application/json; charset=utf-8' } };
-        axios.post(url, param).then((res) => {
-            if (res.err != 'null') alert('insert complete!');
-            else alert(res.err);
-        });
+            return;
+        }
+
+        await Server.INSERT_FILE(code, cost, share, currency);
+        handleClose();
     };
 
     const handleClose = () => {
@@ -114,13 +67,24 @@ const DataInsert = () => {
                 <CustomFormControlLabel
                     control={
                         <TextField
-                            value={price}
+                            value={cost}
                             onChange={(e) => {
-                                SetPrice(e.target.value);
+                                SetCost(e.target.value);
                             }}
                         />
                     }
-                    label={<ErrorLabel labelText={'Price'} errorMessage={''} />}
+                    label={<ErrorLabel labelText={'Cost'} errorMessage={''} />}
+                />
+                <CustomFormControlLabel
+                    control={
+                        <TextField
+                            value={share}
+                            onChange={(e) => {
+                                SetShare(e.target.value);
+                            }}
+                        />
+                    }
+                    label={<ErrorLabel labelText={'Share'} errorMessage={''} />}
                 />
                 <CustomFormControlLabel
                     control={
@@ -155,21 +119,23 @@ const DataInsert = () => {
                     <DialogTitle id="alert-dialog-title">{'Save The Data?'}</DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
-                            <h2>Code : {code}</h2>
-                            <h2>Price : {price}</h2>
-                            <h2>Currency : {currency}</h2>
+                            Code : {code} <br /> Cost : {cost}
+                            <br /> Share : {share}
+                            <br /> Currency : {currency}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleAgree} color="primary" autoFocus>
-                            Agree
+                            OK
                         </Button>
                         <Button onClick={handleClose} color="primary">
-                            Disagree
+                            Cancel
                         </Button>
                     </DialogActions>
                 </Dialog>
             </div>
+            <Divider style={{ margin: '30px 15px' }} />
+            <DataTable />
         </>
     );
 };
