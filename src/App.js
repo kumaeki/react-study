@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import DataInsert from './Components/DataInsert/DataInsert';
 
 class App extends React.Component {
     constructor(props) {
@@ -41,10 +42,15 @@ class App extends React.Component {
 
     render() {
         return (
-            <div>
-                <button onClick={this.searchData}>search</button>
-                {this.getData(this.state.dataList)}
-            </div>
+            <>
+                {/* <div>
+                    <button onClick={this.searchData}>search</button>
+                    {this.getData(this.state.dataList)}
+                </div> */}
+                <div>
+                    <DataInsert />
+                </div>
+            </>
         );
     }
 }
